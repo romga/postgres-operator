@@ -39,12 +39,12 @@ func (c *awspg) CreateDB(dbname, role string) error {
 	return c.pg.CreateDB(dbname, role)
 }
 
-func (c *awspg) CreateUserRole(role, password string, iamAuthentication *bool) (string, error) {
+func (c *awspg) CreateUserRole(role, password string, iamAuthentication bool) (string, error) {
 	returnedRole, err := c.pg.CreateUserRole(role, password, iamAuthentication)
 	if err != nil {
 		return "", err
 	}
-	if iamAuthentication != nil && *iamAuthentication {
+	if iamAuthentication {
 		err = c.GrantRole("rds_iam", c.user)
 		if err != nil {
 			return "", err
