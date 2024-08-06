@@ -134,16 +134,6 @@ func (r *ReconcilePostgresUser) Reconcile(request reconcile.Request) (reconcile.
 			// Initialize database name for connection with default database
 			// in case postgres cr isn't here anymore
 			db := r.pg.GetDefaultDatabase()
-			// Search Postgres CR
-			postgres, err := r.getPostgresCR(instance)
-			// Check if error exists and not a not found error
-			if err != nil && !errors.IsNotFound(err) {
-				return reconcile.Result{}, err
-			}
-			// Check if postgres cr is found and not in deletion state
-			if postgres != nil && !postgres.GetDeletionTimestamp().IsZero() {
-				db = instance.Status.DatabaseName
-			}
 			err = r.pg.DropRole(instance.Status.PostgresRole, instance.Status.PostgresGroup,
 				db, reqLogger)
 			if err != nil {
@@ -177,7 +167,7 @@ func (r *ReconcilePostgresUser) Reconcile(request reconcile.Request) (reconcile.
 		// Create user role
 		suffix := utils.GetRandomString(6)
 		role = fmt.Sprintf("%s-%s", instance.Spec.Role, suffix)
-		login, err = r.pg.CreateUserRole(role, password)
+		login, err = r.pg.CreateUserRole(role, password, instance.Spec.IamAuthentication)
 		if err != nil {
 			return r.requeue(instance, errors.NewInternalError(err))
 		}

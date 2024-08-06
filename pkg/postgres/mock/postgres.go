@@ -92,18 +92,18 @@ func (mr *MockPGMockRecorder) CreateGroupRole(role interface{}) *gomock.Call {
 }
 
 // CreateUserRole mocks base method
-func (m *MockPG) CreateUserRole(role, password string) (string, error) {
+func (m *MockPG) CreateUserRole(role, password string,iamAuthentication bool) (string, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "CreateUserRole", role, password)
+	ret := m.ctrl.Call(m, "CreateUserRole", role, password, false)
 	ret0, _ := ret[0].(string)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // CreateUserRole indicates an expected call of CreateUserRole
-func (mr *MockPGMockRecorder) CreateUserRole(role, password interface{}) *gomock.Call {
+func (mr *MockPGMockRecorder) CreateUserRole(role, password interface{}, iamAuthentication bool) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateUserRole", reflect.TypeOf((*MockPG)(nil).CreateUserRole), role, password)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateUserRole", reflect.TypeOf((*MockPG)(nil).CreateUserRole), role, password, false)
 }
 
 // UpdatePassword mocks base method
