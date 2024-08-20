@@ -5,7 +5,10 @@ import (
 
 	"github.com/go-logr/logr"
 	"github.com/lib/pq"
+	logf "sigs.k8s.io/controller-runtime/pkg/runtime/log"
 )
+
+var log2 = logf.Log.WithName("controller_postgresuser")
 
 type awspg struct {
 	pg
@@ -45,6 +48,7 @@ func (c *awspg) CreateUserRole(role, password string, iamAuthentication bool) (s
 		return "", err
 	}
 	if iamAuthentication {
+		log2.Info(fmt.Sprintf("about to grant rds_iam %s ", c.user))
 		err = c.GrantRole("rds_iam", c.user)
 		if err != nil {
 			return "", err
