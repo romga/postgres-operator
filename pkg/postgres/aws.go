@@ -7,6 +7,7 @@ import (
 	"github.com/lib/pq"
 )
 
+
 type awspg struct {
 	pg
 }
@@ -45,7 +46,7 @@ func (c *awspg) CreateUserRole(role, password string, iamAuthentication bool) (s
 		return "", err
 	}
 	if iamAuthentication {
-		err = c.GrantRole("rds_iam", c.user)
+		err = c.GrantRole("rds_iam", role)
 		if err != nil {
 			return "", err
 		}
