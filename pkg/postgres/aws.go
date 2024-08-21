@@ -48,8 +48,8 @@ func (c *awspg) CreateUserRole(role, password string, iamAuthentication bool) (s
 		return "", err
 	}
 	if iamAuthentication {
-		log2.Info(fmt.Sprintf("about to grant rds_iam %s ", c.user))
-		err = c.GrantRole("rds_iam", c.user)
+		log2.Info(fmt.Sprintf("about to grant rds_iam %s ", role))
+		err = c.GrantRole("rds_iam", role)
 		if err != nil {
 			return "", err
 		}
