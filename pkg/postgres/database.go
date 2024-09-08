@@ -17,8 +17,8 @@ const (
 	GRANT_CREATE_TABLE      = `GRANT CREATE ON SCHEMA "%s" TO "%s"`
 	GRANT_ALL_TABLES        = `GRANT %s ON ALL TABLES IN SCHEMA "%s" TO "%s"`
 	GRANT_ALL_SEQUENCES     = `GRANT %s ON ALL SEQUENCES IN SCHEMA "%s" TO "%s"`
-	DEFAULT_PRIVS_SCHEMA    = `ALTER DEFAULT PRIVILEGES FOR ROLE "%s" IN SCHEMA "%s" GRANT %s ON TABLES TO "%s"`
-	DEFAULT_PRIVS_SEQUENCES = `ALTER DEFAULT PRIVILEGES FOR ROLE "%s" IN SCHEMA "%s" GRANT %s ON SEQUENCES TO "%s"`
+	DEFAULT_PRIVS_SCHEMA    = `ALTER DEFAULT PRIVILEGES IN SCHEMA "%s" GRANT %s ON TABLES TO "%s"`
+	DEFAULT_PRIVS_SEQUENCES = `ALTER DEFAULT PRIVILEGES IN SCHEMA "%s" GRANT %s ON SEQUENCES TO "%s"`
 	REVOKE_CONNECT          = `REVOKE CONNECT ON DATABASE "%s" FROM public`
 	TERMINATE_BACKEND       = `SELECT pg_terminate_backend(pg_stat_activity.pid) FROM pg_stat_activity	WHERE pg_stat_activity.datname = '%s' AND pid <> pg_backend_pid()`
 	GET_DB_OWNER            = `SELECT pg_catalog.pg_get_userbyid(d.datdba) FROM pg_catalog.pg_database d WHERE d.datname = '%s'`
@@ -109,16 +109,22 @@ func (c *pg) SetSchemaPrivileges(schemaPrivileges PostgresSchemaPrivileges, logg
 	if err != nil {
 		return err
 	}
-	logger.Info("about to give permissions of %s to %s", schemaPrivileges.Privs, schemaPrivileges.Role)
+	logger.Info(fmt.Sprintf("about to give permissions of %s to %s", schemaPrivileges.Privs, schemaPrivileges.Role))
+	logger.Info("about to run:")
+	logger.Info(fmt.Sprintf(GRANT_ALL_TABLES, schemaPrivileges.Privs, schemaPrivileges.Schema, schemaPrivileges.Role))
 	// Grant role privs on existing tables in schema
 	_, err = tmpDb.Exec(fmt.Sprintf(GRANT_ALL_TABLES, schemaPrivileges.Privs, schemaPrivileges.Schema, schemaPrivileges.Role))
 	if err != nil {
+		logger.Error(err, "failed in GRANT_ALL_TABLES")
 		return err
 	}
-	logger.Info("about to give default permissions of %s to %s", schemaPrivileges.Privs, schemaPrivileges.Role)
+	logger.Info(fmt.Sprintf("about to give default permissions of %s to %s", schemaPrivileges.Privs, schemaPrivileges.Role))
 	// Grant role privs on future tables in schema
-	_, err = tmpDb.Exec(fmt.Sprintf(DEFAULT_PRIVS_SCHEMA, schemaPrivileges.Creator, schemaPrivileges.Schema, schemaPrivileges.Privs, schemaPrivileges.Role))
+	logger.Info("about to run:")
+	logger.Info(fmt.Sprintf(DEFAULT_PRIVS_SCHEMA, schemaPrivileges.Schema, schemaPrivileges.Privs, schemaPrivileges.Role))
+	_, err = tmpDb.Exec(fmt.Sprintf(DEFAULT_PRIVS_SCHEMA, schemaPrivileges.Schema, schemaPrivileges.Privs, schemaPrivileges.Role))
 	if err != nil {
+		logger.Error(err, "failed in DEFAULT_PRIVS_SCHEMA")
 		return err
 	}
 
@@ -140,15 +146,21 @@ func (c *pg) SetSequncesPrivileges(SequncesPrivileges PostgresSequncesPrivileges
 	}
 	defer tmpDb.Close()
 
+	logger.Info("about to run:")
+	logger.Info(fmt.Sprintf(GRANT_ALL_SEQUENCES, SequncesPrivileges.Privs, SequncesPrivileges.Schema, SequncesPrivileges.Role))
 	// Grant role privs on existing sequences in schema
 	_, err = tmpDb.Exec(fmt.Sprintf(GRANT_ALL_SEQUENCES, SequncesPrivileges.Privs, SequncesPrivileges.Schema, SequncesPrivileges.Role))
 	if err != nil {
+		logger.Error(err, "failed in GRANT_ALL_SEQUENCES")
 		return err
 	}
 
+	logger.Info("about to run:")
+	logger.Info(fmt.Sprintf(DEFAULT_PRIVS_SEQUENCES, SequncesPrivileges.Schema, SequncesPrivileges.Privs, SequncesPrivileges.Role))
 	// Grant role privs on future sequences in schema
-	_, err = tmpDb.Exec(fmt.Sprintf(DEFAULT_PRIVS_SCHEMA, SequncesPrivileges.Creator, SequncesPrivileges.Schema, SequncesPrivileges.Privs, SequncesPrivileges.Role))
+	_, err = tmpDb.Exec(fmt.Sprintf(DEFAULT_PRIVS_SEQUENCES, SequncesPrivileges.Schema, SequncesPrivileges.Privs, SequncesPrivileges.Role))
 	if err != nil {
+		logger.Error(err, "failed in DEFAULT_PRIVS_SEQUENCES")
 		return err
 	}
 
