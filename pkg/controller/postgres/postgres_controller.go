@@ -226,6 +226,7 @@ func (r *ReconcilePostgres) Reconcile(request reconcile.Request) (_ reconcile.Re
 			reqLogger.Error(err, fmt.Sprintf("Could not give %s permissions \"%s\"", reader, readerPrivs))
 			continue
 		}
+		reqLogger.Info("about to give writer %s permissions", writer)
 		schemaPrivilegesWriter := postgres.PostgresSchemaPrivileges{database, owner, writer, schema, writerPrivs, true}
 		err = r.pg.SetSchemaPrivileges(schemaPrivilegesWriter, reqLogger)
 		if err != nil {
