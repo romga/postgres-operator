@@ -206,7 +206,7 @@ func (r *ReconcilePostgres) Reconcile(request reconcile.Request) (_ reconcile.Re
 		readerPrivs = "SELECT"
 		writerPrivs = "SELECT,INSERT,DELETE,UPDATE"
 	)
-	for _, schema := range instance.Spec.Schemas {
+	for _, schema := range append(instance.Spec.Schemas, "public") {
 		// Schema was previously created
 		if utils.ListContains(instance.Status.Schemas, schema) {
 			continue
