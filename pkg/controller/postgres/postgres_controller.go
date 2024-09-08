@@ -226,10 +226,16 @@ func (r *ReconcilePostgres) Reconcile(request reconcile.Request) (_ reconcile.Re
 			reqLogger.Error(err, fmt.Sprintf("Could not give %s permissions \"%s\"", reader, readerPrivs))
 			continue
 		}
-		schemaPrivilegesWriter := postgres.PostgresSchemaPrivileges{database, owner, writer, schema, readerPrivs, true}
+		schemaPrivilegesWriter := postgres.PostgresSchemaPrivileges{database, owner, writer, schema, writerPrivs, true}
 		err = r.pg.SetSchemaPrivileges(schemaPrivilegesWriter, reqLogger)
 		if err != nil {
 			reqLogger.Error(err, fmt.Sprintf("Could not give %s permissions \"%s\"", writer, writerPrivs))
+			continue
+		}
+		sequncesPrivilegesWriter := postgres.PostgresSequncesPrivileges{database, owner, writer, schema, writerPrivs}
+		err = r.pg.SetSequncesPrivileges(sequncesPrivilegesWriter, reqLogger)
+		if err != nil {
+			reqLogger.Error(err, fmt.Sprintf("Could not give %s permissions for sequnces \"%s\"", writer, writerPrivs))
 			continue
 		}
 		schemaPrivilegesOwner := postgres.PostgresSchemaPrivileges{database, owner, owner, schema, readerPrivs, true}

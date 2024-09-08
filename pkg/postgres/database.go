@@ -16,7 +16,9 @@ const (
 	GRANT_USAGE_SCHEMA   = `GRANT USAGE ON SCHEMA "%s" TO "%s"`
 	GRANT_CREATE_TABLE   = `GRANT CREATE ON SCHEMA "%s" TO "%s"`
 	GRANT_ALL_TABLES     = `GRANT %s ON ALL TABLES IN SCHEMA "%s" TO "%s"`
+	GRANT_ALL_SEQUENCES     = `GRANT %s ON ALL SEQUENCES IN SCHEMA "%s" TO "%s"`
 	DEFAULT_PRIVS_SCHEMA = `ALTER DEFAULT PRIVILEGES FOR ROLE "%s" IN SCHEMA "%s" GRANT %s ON TABLES TO "%s"`
+	DEFAULT_PRIVS_SEQUENCES = `ALTER DEFAULT PRIVILEGES FOR ROLE "%s" IN SCHEMA "%s" GRANT %s ON SEQUENCES TO "%s"`
 	REVOKE_CONNECT       = `REVOKE CONNECT ON DATABASE "%s" FROM public`
 	TERMINATE_BACKEND    = `SELECT pg_terminate_backend(pg_stat_activity.pid) FROM pg_stat_activity	WHERE pg_stat_activity.datname = '%s' AND pid <> pg_backend_pid()`
 	GET_DB_OWNER         = `SELECT pg_catalog.pg_get_userbyid(d.datdba) FROM pg_catalog.pg_database d WHERE d.datname = '%s'`
@@ -127,6 +129,30 @@ func (c *pg) SetSchemaPrivileges(schemaPrivileges PostgresSchemaPrivileges, logg
 			return err
 		}
 	}
+
+	return nil
+}
+
+
+func (c *pg) SetSequncesPrivileges(SequncesPrivileges PostgresSequncesPrivileges, logger logr.Logger) error {
+	tmpDb, err := GetConnection(c.user, c.pass, c.host, SequncesPrivileges.DB, c.args, logger)
+	if err != nil {
+		return err
+	}
+	defer tmpDb.Close()
+
+	// Grant role privs on existing sequences in schema
+	_, err = tmpDb.Exec(fmt.Sprintf(GRANT_ALL_SEQUENCES, SequncesPrivileges.Privs, SequncesPrivileges.Schema, SequncesPrivileges.Role))
+	if err != nil {
+		return err
+	}
+
+	// Grant role privs on future sequences in schema
+	_, err = tmpDb.Exec(fmt.Sprintf(DEFAULT_PRIVS_SCHEMA, SequncesPrivileges.Creator, SequncesPrivileges.Schema, SequncesPrivileges.Privs, SequncesPrivileges.Role))
+	if err != nil {
+		return err
+	}
+
 
 	return nil
 }

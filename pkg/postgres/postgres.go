@@ -17,6 +17,7 @@ type PG interface {
 	UpdatePassword(role, password string) error
 	GrantRole(role, grantee string) error
 	SetSchemaPrivileges(schemaPrivileges PostgresSchemaPrivileges, logger logr.Logger) error
+	SetSequncesPrivileges(sequencesPrivileges PostgresSequncesPrivileges, logger logr.Logger) error
 	RevokeRole(role, revoked string) error
 	AlterDefaultLoginRole(role, setRole string) error
 	DropDatabase(db string, logger logr.Logger) error
@@ -42,6 +43,14 @@ type PostgresSchemaPrivileges struct {
 	Schema       string
 	Privs        string
 	CreateSchema bool
+}
+
+type PostgresSequncesPrivileges struct {
+	DB           string
+	Creator      string
+	Role         string
+	Schema       string
+	Privs        string
 }
 
 func NewPG(host, user, password, uri_args, default_database, cloud_type string, logger logr.Logger) (PG, error) {
