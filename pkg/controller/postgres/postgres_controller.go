@@ -206,7 +206,7 @@ func (r *ReconcilePostgres) Reconcile(request reconcile.Request) (_ reconcile.Re
 		readerPrivs = "SELECT"
 		writerPrivs = "SELECT,INSERT,DELETE,UPDATE"
 	)
-	for _, schema := range instance.Spec.Schemas {
+	for _, schema := range append(instance.Spec.Schemas, "public") {
 		// Schema was previously created
 		if utils.ListContains(instance.Status.Schemas, schema) {
 			continue
@@ -220,25 +220,30 @@ func (r *ReconcilePostgres) Reconcile(request reconcile.Request) (_ reconcile.Re
 		}
 
 		// Set privileges on schema
-		schemaPrivilegesReader := postgres.PostgresSchemaPrivileges{database, owner, reader, schema, readerPrivs, false}
+		schemaPrivilegesReader := postgres.PostgresSchemaPrivileges{database, reader, schema, readerPrivs, false}
 		err = r.pg.SetSchemaPrivileges(schemaPrivilegesReader, reqLogger)
 		if err != nil {
 			reqLogger.Error(err, fmt.Sprintf("Could not give %s permissions \"%s\"", reader, readerPrivs))
 			continue
 		}
-		schemaPrivilegesWriter := postgres.PostgresSchemaPrivileges{database, owner, writer, schema, writerPrivs, true}
+		schemaPrivilegesWriter := postgres.PostgresSchemaPrivileges{database, writer, schema, writerPrivs, false}
 		err = r.pg.SetSchemaPrivileges(schemaPrivilegesWriter, reqLogger)
 		if err != nil {
 			reqLogger.Error(err, fmt.Sprintf("Could not give %s permissions \"%s\"", writer, writerPrivs))
 			continue
 		}
-		sequncesPrivilegesWriter := postgres.PostgresSequncesPrivileges{database, owner, writer, schema, writerPrivs}
+		sequncesPrivilegesWriter := postgres.PostgresSequncesPrivileges{database, writer, schema, "USAGE"}
 		err = r.pg.SetSequncesPrivileges(sequncesPrivilegesWriter, reqLogger)
 		if err != nil {
-			reqLogger.Error(err, fmt.Sprintf("Could not give %s permissions for sequnces \"%s\"", writer, writerPrivs))
+			reqLogger.Error(err, fmt.Sprintf("Could not give %s permissions for sequnces \"%s\"", writer, "USAGE"))
 			continue
 		}
-		schemaPrivilegesOwner := postgres.PostgresSchemaPrivileges{database, owner, owner, schema, readerPrivs, true}
+		ownerCreateSchema := true
+		if schema == "public" {
+			reqLogger.Info("schema is public, skipping creation")
+			ownerCreateSchema = false
+		}
+		schemaPrivilegesOwner := postgres.PostgresSchemaPrivileges{database, owner, schema, readerPrivs, ownerCreateSchema}
 		err = r.pg.SetSchemaPrivileges(schemaPrivilegesOwner, reqLogger)
 		if err != nil {
 			reqLogger.Error(err, fmt.Sprintf("Could not give %s permissions \"%s\"", writer, writerPrivs))

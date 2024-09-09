@@ -137,7 +137,7 @@ func (mr *MockPGMockRecorder) GrantRole(role, grantee interface{}) *gomock.Call 
 // SetSchemaPrivileges mocks base method
 func (m *MockPG) SetSchemaPrivileges(privileges postgres.PostgresSchemaPrivileges, logger logr.Logger) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "SetSchemaPrivileges", privileges.DB, privileges.Creator, privileges.Role, privileges.Schema, privileges.Privs, privileges.CreateSchema, logger)
+	ret := m.ctrl.Call(m, "SetSchemaPrivileges", privileges.DB, privileges.Role, privileges.Schema, privileges.Privs, privileges.CreateSchema, logger)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
