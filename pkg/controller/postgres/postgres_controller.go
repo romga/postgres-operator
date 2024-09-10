@@ -238,12 +238,13 @@ func (r *ReconcilePostgres) Reconcile(request reconcile.Request) (_ reconcile.Re
 			reqLogger.Error(err, fmt.Sprintf("Could not give %s permissions for sequnces \"%s\"", writer, "USAGE"))
 			continue
 		}
-		ownerCreateSchema := true
+		// ownerCreateSchema := true
+		reqLogger.Info(fmt.Sprintf("schema is %s", schema))
 		if schema == "public" {
 			reqLogger.Info("schema is public, skipping creation")
-			ownerCreateSchema = false
+			// ownerCreateSchema = false
 		}
-		schemaPrivilegesOwner := postgres.PostgresSchemaPrivileges{database, owner, schema, readerPrivs, ownerCreateSchema}
+		schemaPrivilegesOwner := postgres.PostgresSchemaPrivileges{database, owner, schema, readerPrivs, false}
 		err = r.pg.SetSchemaPrivileges(schemaPrivilegesOwner, reqLogger)
 		if err != nil {
 			reqLogger.Error(err, fmt.Sprintf("Could not give %s permissions \"%s\"", writer, writerPrivs))
